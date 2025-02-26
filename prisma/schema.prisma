@@ -53,3 +53,39 @@ model User {
   accounts Account[]
   sessions Session[]
 }
+
+model Course {
+  id String @id @default(cuid())
+  name String
+  image String
+  unit Unit[]
+}
+
+model Unit {
+  id String @id @default(cuid())
+  name String
+  courseId String
+  course Course @relation(fields: [courseId], references: [id])
+  chapters Chapters[]
+}
+
+model Chapters {
+  id String @id @default(cuid())
+  unitId String
+
+  name String
+  youtubeSearchQuery String
+  videoId String?
+  summary String? @db.VarChar(3000)
+  unit Unit @relation(fields: [unitId], references: [id])
+  questions Question[]
+}
+
+model Question {
+  id String @id @default(cuid())
+  chapterId String
+  question String @db.VarChar(3000)
+  answer String @db.VarChar(3000)
+  options String @db.VarChar(3000)
+  chapters Chapters @relation(fields: [chapterId], references: [id])
+}
