@@ -5,14 +5,21 @@ import { createChaptersSchema } from '../../../../../validators/chapter.validato
 import { strict_output } from '@/lib/gpt';
 import { getUnsplashImage } from '@/lib/unsplash';
 import { prisma } from '@/lib/db';
+import { checkSubscription } from '@/lib/subscription';
 
 export async function POST(req: Request, res: Response) {
   try {
-    // const session = await getAuthSession();
+    const session = await getAuthSession();
 
-    // if(!session?.user) {
-    //     return new Response("Unauthorized", { status: 401 });
-    // }
+    if(!session?.user) {
+        return new Response("Unauthorized", { status: 401 });
+    }
+
+    const isPro = await checkSubscription();
+
+    if(session.user.credits <= 0 && !isPro) {
+      return new Response("No credits", { status: 402 });
+    }
 
     const body = await req.json();
     console.log( createChaptersSchema.parse(body))
@@ -38,8 +45,6 @@ export async function POST(req: Request, res: Response) {
           "an array of chapters, each chapter should have a youtube_search_query and a chapter_title key in the JSON object",
       }
     );
-
-    console.log('output_units-----/n', output_units);
 
     const imageSearchTerm = await strict_output(
       "you are an AI capable of finding the most relevant image for a course",
@@ -78,6 +83,18 @@ export async function POST(req: Request, res: Response) {
           }),
         });
       }
+
+      await prisma.user.update({
+        where: {
+          id: session.user.id,
+        },
+        data: {
+          credits: {
+            decrement: 1,
+          },
+        },
+      });
+      
       return NextResponse.json({ course_id: course.id });
 
     // return NextResponse.json({ output_units, imageSearchTerm, course_image });

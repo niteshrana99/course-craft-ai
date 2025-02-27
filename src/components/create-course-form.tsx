@@ -13,12 +13,13 @@ import { createChaptersSchema } from "../../validators/chapter.validator";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner"
 import { useRouter } from "next/navigation";
+import SubscriptionAction from "./subscription-action";
 
 
 
 type Input = z.infer<typeof createChaptersSchema>;
 
-const CreateCourseForm = () => {
+const CreateCourseForm = ({ isPro } : { isPro: boolean }) => {
   const router = useRouter();
   const { mutate: createChapters, isPending } = useMutation({
     mutationFn: async ({ title, units }: Input) => {
@@ -167,6 +168,7 @@ const CreateCourseForm = () => {
           </Button>
         </form>
       </Form>
+      {!isPro && <SubscriptionAction />}
     </div>
   );
 };
